@@ -1,7 +1,5 @@
 import './style.css'
 import * as THREE from 'three'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
-import * as dat from 'dat.gui'
 
 import vertex from "./shaders/vertex.glsl";
 import fragment from "./shaders/fragment.glsl";
@@ -22,23 +20,15 @@ export default class Sketch {
         }
 
         this.time = 0;
-        this.mouse = new THREE.Vector2(0, 0);
 
         //Perspective camera
         this.camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.01, 10 );
-	    this.camera.position.z = 3.4;
-        this.camera.position.y = 2;
+	    this.camera.position.z = 4;
+        this.camera.position.y = 0;
+        window.camera = this.camera;
         if (window.innerWidth < 500){
-            this.camera.position.z = 7.5
+            this.camera.position.z = 5.5
         }
-
-
-        //Orthographic camera
-        /* let fructumSize = 1;
-        let aspect = window.innerWidth / window.innerHeight;
-        this.camera = new THREE.OrthographicCamera(fructumSize / -2, fructumSize / 2, fructumSize / 2, fructumSize / -2, -1000, 1000);
-        this.camera.position.set(0, 0, 2); */
-
 
         //Scene
 	    this.scene = new THREE.Scene();
@@ -56,76 +46,18 @@ export default class Sketch {
         this.width = this.canvas.offsetWidth;
 
 
-        //Orbit controls
-        this.controls = new OrbitControls(this.camera, this.canvas);
-
-
-
-        //this.mouseEvents();
-        //this.touchEvents();
         this.addMesh();
         this.addBackground();
         this.addParticles();
-        //this.aspect();
-        //this.enableSettings();
         this.render();
         this.handleResize();
     }
-
-
-    enableSettings() {
-        this.gui = new dat.GUI();
-
-        this.gui.add(this.settings, "progress", 0, 1, 0.01);
-    }
-    mouseEvents() {
-        const that = this;
-        function onMouseMove( event ) {
-
-            that.mouse.x = ( event.clientX / window.innerWidth )  - 0.5;
-            that.mouse.y = - ( event.clientY / window.innerHeight ) + 0.5;
-
-            that.camera.rotation.y = that.mouse.x * 0.1
-            that.camera.rotation.x = that.mouse.y * 0.1
-            //that.material.uniforms.mouse.value = new THREE.Vector2(that.mouse.x, that.mouse.y);
-        
-        }
-        window.addEventListener( 'mousemove', onMouseMove, false );
-    }
-    touchEvents() {
-        const that = this
-        this.canvas.addEventListener("touchmove", (e) => {
-            
-            e.preventDefault();
-            that.mouse.x = ( e.targetTouches[0].clientX / window.innerWidth )  - 0.5;
-            that.mouse.y = - ( e.targetTouches[0].clientY / window.innerHeight ) + 0.5;
-
-            that.material.uniforms.mouse.value = new THREE.Vector2(that.mouse.x, that.mouse.y);
-        }, false)
-    }
-    aspect() {
-        this.imageAspect = 1;
-        console.log(this.imageAspect)
-        let a1; let a2;
-        if (this.height / this.width > this.imageAspect) {
-            a1 = (this.width / this.height) * this.imageAspect;
-            a2 = 1;
-        }
-        else {
-            a1 = 1;
-            a2 = (this.height/this.width) / this.imageAspect;
-        }
-        this.material.uniforms.resolution.value.x = this.width;
-        this.material.uniforms.resolution.value.y = this.height;
-        this.material.uniforms.resolution.value.z = a1;
-        this.material.uniforms.resolution.value.w = a2;
-    }
-
+  
     addParticles() {
         this.particlesGeometry = new THREE.BufferGeometry();
 
         let N = 10000 // number of points
-        let position = [] // array of poinst 
+        let position = [] // array of points
         let rad = 1.8;
 
         let inc = Math.PI * (3 - Math.sqrt(5));
@@ -162,7 +94,7 @@ export default class Sketch {
         this.backgroundGeometry = new THREE.BufferGeometry();
 
         let N = 810 // number of points
-        let position = [] // array of poinst 
+        let position = [] // array of points 
         let size = [];
         let rad = 4;
 
@@ -211,10 +143,6 @@ export default class Sketch {
             },
             vertexShader: vertex,
             fragmentShader: fragment,
-            //depthTest: false,
-            //depthWrite: false,
-            //alphaTest: false,
-            //side: THREE.DoubleSide
         })
 
         this.mesh = new THREE.Mesh( this.geometry, this.material );
@@ -226,24 +154,20 @@ export default class Sketch {
     
     render(){
         this.time += 0.01;
-	    this.renderer.render( this.scene, this.camera );
+        
         this.material.uniforms.time.value = this.time;
         this.material.uniforms.progress.value = this.settings.progress;
         this.mesh.position.y = Math.sin(this.time) * 0.3;
-
-
 
         this.particlesMaterial.uniforms.time.value = this.time;
         this.particles.rotation.y = this.time / 3;
         this.particles.position.y = Math.sin(this.time) * 0.3;
 
 
-
         this.backgroundMaterial.uniforms.time.value = this.time;
         this.background.rotation.set(this.time / 40, this.time / 50, this.time / 100);
 
-        //this.scene.rotation.y = this.time / 20;
-
+	    this.renderer.render( this.scene, this.camera );
         window.requestAnimationFrame(this.render.bind(this));
     }
 
